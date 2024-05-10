@@ -1,20 +1,45 @@
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {ScrollView, Button, View, Image, Text} from 'react-native';
 import {LineChart} from 'react-native-gifted-charts';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import {captureRef} from 'react-native-view-shot';
+import Navbar from './Navbar/Navbar';
 
 const sampleData = [1, 2, 3, 4, 5];
 const num = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const App = () => {
+  const [navbarVisible, setNavbarVisible] = useState(true);
+  const [lastScrollOffset, setLastScrollOffset] = useState(0);
+  const [chartData, setChartData] = useState([]);
+
   const generateData = () => {
     return sampleData.map((value, index) => ({
       value: Math.random() * 10,
     }));
   };
 
-  // Create an array of refs for each LineChart
+  useEffect(() => {
+    const data = [];
+    for (let i = 0; i < num.length; i++) {
+      data.push(generateData());
+    }
+    setChartData(data);
+  }, []);
+
+  const handleScroll = event => {
+    const currentScrollOffset = event.nativeEvent.contentOffset.y;
+    const scrollUp = currentScrollOffset < lastScrollOffset;
+
+    if (scrollUp) {
+      setNavbarVisible(true);
+    } else {
+      setNavbarVisible(false);
+    }
+
+    setLastScrollOffset(currentScrollOffset);
+  };
+
   const chartRefs = num.map(() => useRef());
 
   const generatePdf = async () => {
@@ -106,15 +131,18 @@ const App = () => {
   };
 
   return (
-    <ScrollView>
-      {num.map((n, index) => (
-        <View key={n} ref={chartRefs[index]} collapsable={false}>
-          <Text>Chart {n + 1}</Text>
-          <LineChart data={generateData()} />
-        </View>
-      ))}
-      <Button title="Generate PDF" onPress={generatePdf} />
-    </ScrollView>
+    <View style={{flex: 1, position: 'relative'}}>
+      <ScrollView onScroll={handleScroll}>
+        {num.map((n, index) => (
+          <View key={n} ref={chartRefs[index]} collapsable={false}>
+            <Text>Chart {n + 1}</Text>
+            <LineChart data={chartData[index]} />
+          </View>
+        ))}
+        <Button title="Generate PDF" onPress={generatePdf} />
+      </ScrollView>
+      <Navbar navbarVisible={navbarVisible} />
+    </View>
   );
 };
 
