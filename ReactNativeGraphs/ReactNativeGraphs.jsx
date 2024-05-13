@@ -3,6 +3,7 @@ import {ScrollView, Button, View, Image, Text} from 'react-native';
 import {BarChart, LineChart, PieChart} from 'react-native-gifted-charts';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import {captureRef} from 'react-native-view-shot';
+import Navbar from '../Navbar/Navbar';
 
 const sampleData = [1, 2, 3, 4, 5];
 
@@ -12,21 +13,60 @@ const generateData = () => {
   }));
 };
 
-const ReactNativeGraphs = ({graphsArr}) => {
-  const [chartData, setChartData] = useState(
-    Array.from(Array(graphsArr.length), () => generateData()),
-  );
-  const chartRefs = useRef(Array.from(Array(graphsArr.length), () => useRef()));
+const chartTypes = ['line', 'pie', 'bar', 'lineArea'];
 
-  const chartTypes = ['line', 'pie', 'bar', 'lineArea'];
+const ReactNativeGraphs = ({navigation, route}) => {
+  const [navbarVisible, setNavbarVisible] = useState(true);
+  const [lastScrollOffset, setLastScrollOffset] = useState(0);
+  const [graphsArr, setGraphsArr] = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [chartImages, setChartImages] = useState([]);
+
+  const chartRefs = useRef(Array.from({length: 10}, () => null));
+
+  const number = route?.params?.chartNumber;
+
+  useEffect(() => {
+    const newGraphsArr = [];
+    for (let i = 0; i < parseInt(number, 10); i++) {
+      newGraphsArr.push(i);
+    }
+    setGraphsArr(newGraphsArr);
+  }, [number]);
 
   useEffect(() => {
     const data = [];
     for (let i = 0; i < graphsArr.length; i++) {
-      data.push(generateData());
+      data.push({
+        type: chartTypes[i % chartTypes.length],
+        data: generateData(),
+      });
     }
     setChartData(data);
   }, [graphsArr]);
+
+  const handleScroll = event => {
+    const currentScrollOffset = event.nativeEvent.contentOffset.y;
+    const scrollUp = currentScrollOffset < lastScrollOffset;
+
+    if (scrollUp) {
+      setNavbarVisible(true);
+    } else {
+      setNavbarVisible(false);
+    }
+
+    setLastScrollOffset(currentScrollOffset);
+  };
+
+  const captureChartImage = async index => {
+    if (chartRefs.current[index]) {
+      const chartContainerRef = await captureRef(chartRefs.current[index], {
+        format: 'png',
+        quality: 0.8,
+      });
+      setChartImages(prevImages => [...prevImages, chartContainerRef]);
+    }
+  };
 
   const generatePdf = async () => {
     const pdfPages = [];
@@ -86,16 +126,13 @@ const ReactNativeGraphs = ({graphsArr}) => {
 
       for (let j = 0; j < pageCharts.length; j++) {
         const chartIndex = pageCharts[j];
-        const chartRef = chartRefs.current[chartIndex];
-        if (chartRef.current) {
-          const chartContainerRef = await captureRef(chartRef.current, {
-            format: 'png',
-            quality: 0.8,
-          });
-          pageHtml += `<div class="chart-container">
-          <p>Chart ${chartIndex + 1}</p>
-          <Image src="${chartContainerRef}" class="chart-img" />
-          </div>`;
+        if (chartImages[chartIndex]) {
+          pageHtml += `
+              <div class="chart-container">
+                <p>Chart ${chartIndex + 1}</p>
+                <img src="${chartImages[chartIndex]}" class="chart-img" />
+              </div>
+            `;
         }
       }
 
@@ -121,26 +158,31 @@ const ReactNativeGraphs = ({graphsArr}) => {
 
   return (
     <View style={{flex: 1, position: 'relative'}}>
-      <ScrollView>
+      <ScrollView onScroll={handleScroll}>
         {graphsArr.map((n, index) => (
-          <View key={n} collapsable={false} ref={chartRefs.current[index]}>
+          <View
+            key={n}
+            collapsable={false}
+            ref={ref => (chartRefs.current[index] = ref)}
+            onLayout={() => captureChartImage(index)}>
             <Text>Chart {n + 1}</Text>
-            {chartTypes[index % chartTypes.length] === 'line' && (
-              <LineChart data={chartData[index]} />
+            {chartData[index]?.type === 'line' && (
+              <LineChart data={chartData[index]?.data} />
             )}
-            {chartTypes[index % chartTypes.length] === 'pie' && (
-              <PieChart data={chartData[index]} />
+            {chartData[index]?.type === 'pie' && (
+              <PieChart data={chartData[index]?.data} />
             )}
-            {chartTypes[index % chartTypes.length] === 'bar' && (
-              <BarChart data={chartData[index]} />
+            {chartData[index]?.type === 'bar' && (
+              <BarChart data={chartData[index]?.data} />
             )}
-            {chartTypes[index % chartTypes.length] === 'lineArea' && (
-              <LineChart data={chartData[index]} areaChart />
+            {chartData[index]?.type === 'lineArea' && (
+              <LineChart data={chartData[index]?.data} areaChart />
             )}
           </View>
         ))}
         <Button title="Generate PDF" onPress={generatePdf} />
       </ScrollView>
+      <Navbar navbarVisible={navbarVisible} />
     </View>
   );
 };
