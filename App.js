@@ -1,31 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {ScrollView, Button, View, Image, Text} from 'react-native';
-import {LineChart} from 'react-native-gifted-charts';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import {captureRef} from 'react-native-view-shot';
+import {ScrollView, Button, View, Image, Text, TextInput} from 'react-native';
 import Navbar from './Navbar/Navbar';
-
-const sampleData = [1, 2, 3, 4, 5];
-const num = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+import ReactNativeGraphs from './ReactNativeGraphs/ReactNativeGraphs';
 
 const App = () => {
   const [navbarVisible, setNavbarVisible] = useState(true);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
-  const [chartData, setChartData] = useState([]);
-
-  const generateData = () => {
-    return sampleData.map((value, index) => ({
-      value: Math.random() * 10,
-    }));
-  };
-
-  useEffect(() => {
-    const data = [];
-    for (let i = 0; i < num.length; i++) {
-      data.push(generateData());
-    }
-    setChartData(data);
-  }, []);
+  const [chartNumber, setChartNumber] = useState();
+  const [showChart, setShowChart] = useState(false);
+  const [graphsArr, setGraphsArr] = useState([]);
 
   const handleScroll = event => {
     const currentScrollOffset = event.nativeEvent.contentOffset.y;
@@ -40,108 +23,52 @@ const App = () => {
     setLastScrollOffset(currentScrollOffset);
   };
 
-  const chartRefs = num.map(() => useRef());
-
-  const generatePdf = async () => {
-    const pdfPages = [];
-    const chartsPerPage = 4;
-
-    for (let i = 0; i < num.length; i += chartsPerPage) {
-      const pageCharts = num.slice(i, i + chartsPerPage);
-
-      const headerHtml = `
-        <div class="header">
-          <div>Report Date: ${new Date().toLocaleDateString()}</div>
-        </div>
-      `;
-
-      const footerHtml = `
-        <div class="footer">
-          <a href="https://example.com">Click here for more information</a>
-        </div>
-      `;
-
-      let pageHtml = `
-        <html>
-          <head>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-              }
-              .container {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                padding: 20px;
-              }
-              .chart-container {
-                width: 100%;
-              }
-              .chart-img {
-                width: 100%;
-                height: auto;
-                margin-bottom: 20px;
-              }
-              .header, .footer {
-                width: 100%;
-                text-align: center;
-              }
-              .footer a {
-                color: blue;
-                text-decoration: none;
-              }
-            </style>
-          </head>
-          <body>
-            ${headerHtml}
-            <div class="container">
-      `;
-
-      for (let j = 0; j < pageCharts.length; j++) {
-        const chartIndex = pageCharts[j];
-        const chartContainerRef = await captureRef(chartRefs[chartIndex], {
-          format: 'png',
-          quality: 0.8,
-        });
-        pageHtml += `<div class="chart-container">
-        <p>Chart ${chartIndex + 1}</p>
-        <Image src="${chartContainerRef}" class="chart-img" />
-        </div>`;
+  const handleCharts = () => {
+    if (chartNumber > 0) {
+      const newGraphsArr = [];
+      for (let i = 0; i < parseInt(chartNumber, 10); i++) {
+        newGraphsArr.push(i);
       }
-
-      pageHtml += `
-            </div>
-            ${footerHtml}
-          </body>
-        </html>
-      `;
-
-      pdfPages.push(pageHtml);
+      setShowChart(true);
+      setGraphsArr(newGraphsArr);
+    } else {
+      setShowChart(false);
     }
-
-    const options = {
-      html: pdfPages.join('<div style="page-break-after:always;"></div>'),
-      fileName: 'mobile-charts',
-      directory: 'Documents',
-    };
-
-    const pdf = await RNHTMLtoPDF.convert(options);
-    console.log(pdf.filePath);
   };
 
   return (
-    <View style={{flex: 1, position: 'relative'}}>
-      <ScrollView onScroll={handleScroll}>
-        {num.map((n, index) => (
-          <View key={n} ref={chartRefs[index]} collapsable={false}>
-            <Text>Chart {n + 1}</Text>
-            <LineChart data={chartData[index]} />
+    <View>
+      <ScrollView onScroll={handleScroll} style={{paddingHorizontal: 20}}>
+        {showChart === false && (
+          <View style={{alignItems: 'center', marginBottom: 20}}>
+            <Text style={{marginBottom: 10}}>
+              Enter the number of graphs you want?
+            </Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: 'gray',
+                borderRadius: 5,
+                padding: 10,
+                width: '80%',
+              }}
+              placeholder="Enter a number"
+              onChangeText={text => setChartNumber(text)}
+              onSubmitEditing={handleCharts}
+              keyboardType="number-pad"
+            />
           </View>
-        ))}
-        <Button title="Generate PDF" onPress={generatePdf} />
+        )}
+        {showChart ? (
+          <ReactNativeGraphs graphsArr={graphsArr} />
+        ) : (
+          <Text style={{textAlign: 'center'}}>
+            Please enter a value to get the entered number of graphs!
+          </Text>
+        )}
       </ScrollView>
-      <Navbar navbarVisible={navbarVisible} />
+
+      <Navbar navbarVisible={navbarVisible} showChart={showChart} />
     </View>
   );
 };
