@@ -15,16 +15,15 @@ const generateData = () => {
 
 const chartTypes = ['line', 'pie', 'bar', 'lineArea'];
 
-const ReactNativeGraphs = ({navigation, route}) => {
+const ReactNativeGraphs = ({route}) => {
   const [navbarVisible, setNavbarVisible] = useState(true);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const [graphsArr, setGraphsArr] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartImages, setChartImages] = useState([]);
 
-  const chartRefs = useRef(Array.from({length: 10}, () => null));
-
   const number = route?.params?.chartNumber;
+  const chartRefs = useRef(Array.from({length: number}, () => null));
 
   useEffect(() => {
     const newGraphsArr = [];
@@ -64,6 +63,7 @@ const ReactNativeGraphs = ({navigation, route}) => {
         format: 'png',
         quality: 0.8,
       });
+      console.log(chartContainerRef, '****');
       setChartImages(prevImages => [...prevImages, chartContainerRef]);
     }
   };
@@ -127,6 +127,7 @@ const ReactNativeGraphs = ({navigation, route}) => {
       for (let j = 0; j < pageCharts.length; j++) {
         const chartIndex = pageCharts[j];
         if (chartImages[chartIndex]) {
+          console.log(chartImages[chartIndex]);
           pageHtml += `
               <div class="chart-container">
                 <p>Chart ${chartIndex + 1}</p>
