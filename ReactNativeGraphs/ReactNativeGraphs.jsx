@@ -6,6 +6,7 @@ import {
   Text,
   PermissionsAndroid,
   Platform,
+  Dimensions,
   Alert,
 } from 'react-native';
 import {BarChart, LineChart, PieChart} from 'react-native-gifted-charts';
@@ -13,6 +14,7 @@ import {captureRef} from 'react-native-view-shot';
 import Navbar from '../Navbar/Navbar';
 import RNFS from 'react-native-fs';
 import {PDFDocument, rgb, PageSizes} from 'pdf-lib';
+import Pdf from 'react-native-pdf';
 import analytics from '@react-native-firebase/analytics';
 
 const sampleData = [1, 2, 3, 4, 5];
@@ -32,6 +34,8 @@ const ReactNativeGraphs = ({route}) => {
   const [chartData, setChartData] = useState([]);
   const [chartImages, setChartImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPdf, setShowPdf] = useState(false);
+  const [pdfURI, setPdfURI] = useState(null);
   const chartRefs = useRef([]);
   const number = route?.params?.chartNumber;
 
@@ -156,6 +160,9 @@ const ReactNativeGraphs = ({route}) => {
       await analytics().logEvent('pdf_generated', {
         pdfPath,
       });
+      setShowPdf(true);
+      setPdfURI(pdfPath);
+      console.log('file://' + pdfPath);
       Alert.alert(`PDF saved at: ${pdfPath}`);
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -196,6 +203,25 @@ const ReactNativeGraphs = ({route}) => {
         />
       </ScrollView>
       <Navbar navbarVisible={navbarVisible} />
+      {showPdf ? (
+        <View style={{flex: 1}}>
+          <Pdf
+            trustAllCerts={false}
+            source={{uri: 'file://' + pdfURI}}
+            onLoadComplete={(numberOfPages, filePath) => {
+              console.log(`Number of pages: ${numberOfPages}`);
+              console.log(`File path: ${filePath}`);
+            }}
+            onPageChanged={(page, numberOfPages) => {
+              console.log(`Current page: ${page}`);
+            }}
+            onError={error => {
+              console.log('Error loading PDF:', error);
+            }}
+            style={{flex: 1, width: Dimensions.get('window').width}}
+          />
+        </View>
+      ) : null}
     </View>
   );
 };
