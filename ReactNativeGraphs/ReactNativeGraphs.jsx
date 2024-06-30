@@ -14,7 +14,6 @@ import {captureRef} from 'react-native-view-shot';
 import Navbar from '../Navbar/Navbar';
 import RNFS from 'react-native-fs';
 import {PDFDocument, rgb, PageSizes} from 'pdf-lib';
-import Pdf from 'react-native-pdf';
 import analytics from '@react-native-firebase/analytics';
 
 const sampleData = [1, 2, 3, 4, 5];
@@ -27,14 +26,13 @@ const generateData = () => {
 
 const chartTypes = ['line', 'pie', 'bar', 'lineArea'];
 
-const ReactNativeGraphs = ({route}) => {
+const ReactNativeGraphs = ({route, navigation}) => {
   const [navbarVisible, setNavbarVisible] = useState(true);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const [graphsArr, setGraphsArr] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartImages, setChartImages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showPdf, setShowPdf] = useState(false);
   const [pdfURI, setPdfURI] = useState(null);
   const chartRefs = useRef([]);
   const number = route?.params?.chartNumber;
@@ -155,14 +153,13 @@ const ReactNativeGraphs = ({route}) => {
       }
 
       const pdfBytes = await pdfDoc.saveAsBase64();
-      const pdfPath = '/storage/emulated/0/Download/graphs.pdf';
+      const pdfPath = `${RNFS.DocumentDirectoryPath}/graphs.pdf`;
       await RNFS.writeFile(pdfPath, pdfBytes, 'base64');
       await analytics().logEvent('pdf_generated', {
         pdfPath,
       });
-      setShowPdf(true);
-      setPdfURI(pdfPath);
-      console.log('file://' + pdfPath);
+      setPdfURI(`file://${pdfPath}`);
+      console.log(pdfURI);
       Alert.alert(`PDF saved at: ${pdfPath}`);
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -170,6 +167,10 @@ const ReactNativeGraphs = ({route}) => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (pdfURI) navigation.navigate('PdfScreen', {pdfURI});
+  }, [pdfURI]);
 
   return (
     <View style={{flex: 1, position: 'relative'}}>
@@ -203,25 +204,6 @@ const ReactNativeGraphs = ({route}) => {
         />
       </ScrollView>
       <Navbar navbarVisible={navbarVisible} />
-      {showPdf ? (
-        <View style={{flex: 1}}>
-          <Pdf
-            trustAllCerts={false}
-            source={{uri: 'file://' + pdfURI}}
-            onLoadComplete={(numberOfPages, filePath) => {
-              console.log(`Number of pages: ${numberOfPages}`);
-              console.log(`File path: ${filePath}`);
-            }}
-            onPageChanged={(page, numberOfPages) => {
-              console.log(`Current page: ${page}`);
-            }}
-            onError={error => {
-              console.log('Error loading PDF:', error);
-            }}
-            style={{flex: 1, width: Dimensions.get('window').width}}
-          />
-        </View>
-      ) : null}
     </View>
   );
 };
