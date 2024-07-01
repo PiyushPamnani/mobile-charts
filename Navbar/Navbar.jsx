@@ -1,4 +1,4 @@
-import {TouchableOpacity} from 'react-native';
+import {TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import styles from './navbar.style';
@@ -9,7 +9,11 @@ import Transition from '../Transition/Transition';
 const Navbar = ({navbarVisible}) => {
   const navigation = useNavigation();
   return (
-    <Transition navbarVisible={navbarVisible} style={styles.navContainer}>
+    /* For smooth transition of Navbar, use this instead of View tag. But the buttons will still be active and will navigate to different screens on click even if they are not visible
+      <Transition navbarVisible={navbarVisible} style={styles.navContainer}>
+      </Transition>
+    */
+    <View style={navbarVisible ? styles.navContainer : styles.hiddenNav}>
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <FontAwesomeIcon icon={faHouse} />
       </TouchableOpacity>
@@ -19,7 +23,7 @@ const Navbar = ({navbarVisible}) => {
       <TouchableOpacity onPress={() => navigation.navigate('Contact')}>
         <FontAwesomeIcon icon={faPhone} />
       </TouchableOpacity>
-    </Transition>
+    </View>
   );
 };
 

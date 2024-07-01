@@ -103,6 +103,7 @@ const ReactNativeGraphs = ({route, navigation}) => {
   const generatePdf = async () => {
     setLoading(true);
     try {
+      setPdfURI(null);
       const pdfDoc = await PDFDocument.create();
       const chartsPerRow = 2;
       const chartsPerPage = 4;
@@ -169,7 +170,9 @@ const ReactNativeGraphs = ({route, navigation}) => {
   };
 
   useEffect(() => {
-    if (pdfURI) navigation.navigate('PdfScreen', {pdfURI});
+    if (pdfURI !== null) {
+      navigation.navigate('PdfScreen', {pdfURI});
+    }
   }, [pdfURI]);
 
   return (

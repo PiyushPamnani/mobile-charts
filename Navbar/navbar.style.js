@@ -13,6 +13,10 @@ const styles = StyleSheet.create({
     zIndex: 2,
     justifyContent: 'space-around',
   },
+
+  hiddenNav: {
+    display: 'none',
+  },
 });
 
 export default styles;
