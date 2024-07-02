@@ -1,12 +1,12 @@
 import React from 'react';
-import {View, Dimensions} from 'react-native';
+import {View, Dimensions, StyleSheet} from 'react-native';
 import Pdf from 'react-native-pdf';
 
 const PDFScreen = ({route}) => {
   const {pdfURI} = route.params;
 
   return (
-    <View style={{flex: 1}}>
+    <View style={styles.container}>
       <Pdf
         trustAllCerts={false}
         source={{uri: pdfURI}}
@@ -20,14 +20,27 @@ const PDFScreen = ({route}) => {
         onError={error => {
           console.log('Error loading PDF:', error);
         }}
-        style={{
-          flex: 1,
-          width: Dimensions.get('window').width,
-          height: Dimensions.get('window').height,
-        }}
+        style={styles.pdf}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    padding: 10,
+  },
+  pdf: {
+    flex: 1,
+    width: Dimensions.get('window').width - 20,
+    height: Dimensions.get('window').height - 20,
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 10,
+    backgroundColor: '#e4e4e4',
+  },
+});
 
 export default PDFScreen;
