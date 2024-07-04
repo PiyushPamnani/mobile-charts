@@ -1,9 +1,12 @@
 import React from 'react';
 import {View, Dimensions, StyleSheet} from 'react-native';
 import Pdf from 'react-native-pdf';
+import useAnalytics from '../hook/useAnalytics';
 
 const PDFScreen = ({route}) => {
   const {pdfURI} = route.params;
+
+  useAnalytics('PDF Screen');
 
   return (
     <View style={styles.container}>

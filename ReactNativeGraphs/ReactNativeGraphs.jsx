@@ -7,6 +7,7 @@ import analytics from '@react-native-firebase/analytics';
 import {requestPermissions} from './Permission';
 import Graphs from './Graphs';
 import styles from './graphs.style';
+import useAnalytics from '../hook/useAnalytics';
 
 const sampleData = [1, 2, 3, 4, 5];
 
@@ -24,9 +25,11 @@ const ReactNativeGraphs = ({route, navigation}) => {
   const [graphsArr, setGraphsArr] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartImages, setChartImages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [pdfURI, setPdfURI] = useState(null);
   const number = route?.params?.chartNumber;
+
+  useAnalytics('Graph Screen');
 
   useEffect(() => {
     requestPermissions();

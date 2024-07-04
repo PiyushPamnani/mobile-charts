@@ -51,7 +51,6 @@ const Graphs = ({chartData, setChartImages, index, setLoading, n}) => {
           data={chartData[index]?.data}
           donut
           isAnimated
-          radius={80}
           centerLabelComponent={() => <Text>Total</Text>}
           strokeWidth={5}
           hideLegend

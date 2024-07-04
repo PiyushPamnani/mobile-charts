@@ -1,8 +1,11 @@
 import React, {useState} from 'react';
 import {ScrollView, View, Text, TextInput} from 'react-native';
+import useAnalytics from '../hook/useAnalytics';
 
 const Home = ({navigation}) => {
   const [chartNumber, setChartNumber] = useState();
+
+  useAnalytics('Home Screen');
 
   const handleCharts = () => {
     if (chartNumber > 0) {
